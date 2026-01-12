@@ -3,14 +3,9 @@ import { Keypair } from '@solana/web3.js';
 import * as bip39 from 'bip39';
 import { derivePath } from 'ed25519-hd-key';
 import { QRCodeCanvas } from 'qrcode.react';
-import { Buffer } from 'buffer';
-if (typeof window !== 'undefined') {
-  window.Buffer = window.Buffer || Buffer;
-  window.process = window.process || { env: {} }; 
-}
 
-// Polyfill Buffer for the browser environment (Required for bip39)
-
+// Note: Ensure you have added the polyfills in your main.jsx or vite.config.js
+// as described in the instructions above for this to work.
 
 const SolanaWalletGenerator = () => {
   const [wallet, setWallet] = useState(null);
@@ -18,10 +13,11 @@ const SolanaWalletGenerator = () => {
 
   const generateWallet = async () => {
     try {
+      // Generate a 12-word mnemonic
       const mnemonic = bip39.generateMnemonic();
       const seed = await bip39.mnemonicToSeed(mnemonic);
       
-      // Phantom Wallet derivation path
+      // Phantom Wallet derivation path (Solana standard)
       const path = "m/44'/501'/0'/0'";
       const derivedSeed = derivePath(path, seed.toString('hex')).key;
       const keypair = Keypair.fromSeed(derivedSeed);
@@ -33,6 +29,7 @@ const SolanaWalletGenerator = () => {
       setCopied(false);
     } catch (error) {
       console.error("Error generating wallet:", error);
+      alert("Error generating wallet. Check console for details (often polyfill issues).");
     }
   };
 
