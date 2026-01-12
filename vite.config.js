@@ -1,13 +1,13 @@
-// vite.config.js
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { nodePolyfills } from 'vite-plugin-node-polyfills' // Optional: simpler if you install this plugin
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
-// OR use this manual config:
 export default defineConfig({
-  plugins: [react()],
-  define: {
-    'process.env': {},
-    'global': 'window',
-  },
+  plugins: [
+    react(),
+    nodePolyfills({
+      // Whether to polyfill `node:` protocol imports.
+      protocolImports: true,
+    }),
+  ],
 })
