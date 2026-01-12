@@ -4,11 +4,13 @@ import * as bip39 from 'bip39';
 import { derivePath } from 'ed25519-hd-key';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Buffer } from 'buffer';
-
-// Polyfill Buffer for the browser environment (Required for bip39)
 if (typeof window !== 'undefined') {
   window.Buffer = window.Buffer || Buffer;
+  window.process = window.process || { env: {} }; 
 }
+
+// Polyfill Buffer for the browser environment (Required for bip39)
+
 
 const SolanaWalletGenerator = () => {
   const [wallet, setWallet] = useState(null);
