@@ -71,7 +71,7 @@ const MinimalCardWallet = () => {
 
       {/* --- THE CARD --- */}
       <div 
-        className={`relative bg-white text-black shadow-2xl print:shadow-none overflow-hidden flex flex-col items-center justify-between p-8
+        className={`relative bg-white text-black shadow-2xl print:shadow-none overflow-hidden flex flex-col items-center justify-between px-8 py-10
         ${!wallet ? 'opacity-50 blur-sm' : 'opacity-100'}`}
         style={{ 
           width: '350px', 
@@ -80,42 +80,32 @@ const MinimalCardWallet = () => {
         }}
       >
         {/* Top: QR & Address */}
-        <div className="flex flex-col items-center w-full pt-4">
+        <div className="flex flex-col items-center w-full mt-4">
             <QRCodeCanvas 
                 value={wallet?.publicKey || "placeholder"} 
-                size={200}
+                size={220}
                 level={"H"}
             />
             
-            {/* Minimal Address String */}
-            <p className="font-mono text-[10px] text-gray-500 mt-6 text-center break-all w-full leading-relaxed">
+            <p className="font-mono text-[10px] text-gray-500 mt-6 text-center break-all w-full leading-relaxed select-all">
                 {wallet?.publicKey || "------------------------------------------------"}
             </p>
         </div>
 
-        {/* Bottom: The Dotted Box */}
-        <div className="w-full border-2 border-dashed border-gray-300 rounded-xl p-6 flex items-center justify-center min-h-[220px]">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-4 w-full">
-                {wallet ? (
-                    wallet.mnemonic.split(' ').map((word, index) => (
-                        <div key={index} className="flex items-baseline gap-2">
-                            <span className="text-[10px] text-gray-400 font-mono select-none">
-                                {(index + 1)}.
-                            </span>
-                            <span className="text-sm font-bold font-mono text-gray-800">
-                                {word}
-                            </span>
-                        </div>
-                    ))
-                ) : (
-                   <span className="text-gray-300 text-xs font-mono text-center col-span-2">
-                       // RECOVERY PHRASE AREA //
-                   </span>
-                )}
-            </div>
+        {/* Bottom: The Dotted Box (Raw Text) */}
+        <div className="w-full border-2 border-dashed border-gray-300 rounded-xl p-6 flex items-center justify-center min-h-[140px] mb-8">
+            {wallet ? (
+                <p className="font-mono text-lg text-center leading-relaxed text-gray-800 break-words font-medium">
+                    {wallet.mnemonic}
+                </p>
+            ) : (
+                <span className="text-gray-300 text-xs font-mono text-center">
+                    // RAW SEED //
+                </span>
+            )}
         </div>
 
-        {/* Tiny Network Indicator (Bottom Right Corner) - Just so you know what it is */}
+        {/* Tiny Network Indicator (Bottom Right) */}
         <div className="absolute bottom-2 right-4 text-[10px] font-bold text-gray-300">
             {network}
         </div>
