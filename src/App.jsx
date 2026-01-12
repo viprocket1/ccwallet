@@ -1,36 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Keypair } from '@solana/web3.js';
 import * as bip39 from 'bip39';
 import { derivePath } from 'ed25519-hd-key';
 import { QRCodeCanvas } from 'qrcode.react';
 import { ethers } from 'ethers';
 
-// Note: Ensure polyfills (Buffer, etc.) are configured in vite.config.js for bip39 to work.
-
-const CryptoWalletGenerator = () => {
+const BusinessCardWallet = () => {
   const [wallet, setWallet] = useState(null);
-  const [copied, setCopied] = useState(false);
-  const [network, setNetwork] = useState('SOL'); // Options: 'SOL' or 'ETH'
+  const [network, setNetwork] = useState('SOL'); // 'SOL' or 'ETH'
 
-  // Theme configuration based on network
+  // Ref for printing logic if needed
+  const cardRef = useRef();
+
   const theme = {
     SOL: {
       name: 'Solana',
-      bg: 'bg-purple-600',
-      bgHover: 'hover:bg-purple-700',
-      lightBg: 'bg-purple-50',
-      text: 'text-purple-600',
-      border: 'border-purple-200',
-      icon: '◎'
+      color: '#9333ea', // Purple-600
+      borderColor: 'border-purple-600',
+      textColor: 'text-purple-600',
+      bgLight: 'bg-purple-50',
+      ticker: 'SOL'
     },
     ETH: {
       name: 'Ethereum',
-      bg: 'bg-blue-600',
-      bgHover: 'hover:bg-blue-700',
-      lightBg: 'bg-blue-50',
-      text: 'text-blue-600',
-      border: 'border-blue-200',
-      icon: 'Ξ'
+      color: '#2563eb', // Blue-600
+      borderColor: 'border-blue-600',
+      textColor: 'text-blue-600',
+      bgLight: 'bg-blue-50',
+      ticker: 'ETH'
     }
   };
 
@@ -38,151 +35,183 @@ const CryptoWalletGenerator = () => {
 
   const generateWallet = async () => {
     try {
-      // 1. Generate Mnemonic (BIP39) - Common for both
       const mnemonic = bip39.generateMnemonic();
-      
       let publicKey = '';
 
       if (network === 'SOL') {
-        // --- SOLANA GENERATION ---
         const seed = await bip39.mnemonicToSeed(mnemonic);
-        // Phantom/Solana standard path
         const path = "m/44'/501'/0'/0'"; 
         const derivedSeed = derivePath(path, seed.toString('hex')).key;
         const keypair = Keypair.fromSeed(derivedSeed);
         publicKey = keypair.publicKey.toBase58();
       } else {
-        // --- ETHEREUM GENERATION ---
-        // Ethers.js handles BIP39 and standard ETH path (m/44'/60'/0'/0/0) automatically
         const ethWallet = ethers.Wallet.fromPhrase(mnemonic);
         publicKey = ethWallet.address;
       }
 
-      setWallet({
-        mnemonic,
-        publicKey,
-        network
-      });
-      setCopied(false);
+      setWallet({ mnemonic, publicKey });
     } catch (error) {
       console.error("Error generating wallet:", error);
-      alert(`Error generating ${network} wallet. Check console.`);
     }
   };
 
-  const copyToClipboard = () => {
-    if (wallet) {
-      navigator.clipboard.writeText(wallet.mnemonic);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
-  const handleNetworkChange = (net) => {
-    setNetwork(net);
-    setWallet(null); // Clear previous wallet when switching
+  const handlePrint = () => {
+    window.print();
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transition-colors duration-300">
-        
-        {/* Header with Toggle */}
-        <div className={`${currentTheme.bg} p-6 text-center transition-colors duration-300`}>
-          <div className="flex justify-center gap-1 bg-black/20 p-1 rounded-lg backdrop-blur-sm w-fit mx-auto mb-4">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-10 font-sans print:bg-white print:p-0">
+      
+      {/* --- CONTROLS (Hidden when printing) --- */}
+      <div className="mb-8 p-4 bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col gap-4 w-full max-w-sm print:hidden">
+        <div className="flex gap-2 justify-center bg-gray-100 p-1 rounded-lg">
+          {['SOL', 'ETH'].map((net) => (
             <button
-              onClick={() => handleNetworkChange('SOL')}
-              className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
-                network === 'SOL' ? 'bg-white text-purple-600 shadow-sm' : 'text-purple-100 hover:bg-white/10'
+              key={net}
+              onClick={() => { setNetwork(net); setWallet(null); }}
+              className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
+                network === net ? 'bg-white shadow-sm text-black' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              SOLANA
+              {net}
             </button>
-            <button
-              onClick={() => handleNetworkChange('ETH')}
-              className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
-                network === 'ETH' ? 'bg-white text-blue-600 shadow-sm' : 'text-blue-100 hover:bg-white/10'
-              }`}
-            >
-              ETHEREUM
-            </button>
-          </div>
-          
-          <h2 className="text-2xl font-bold text-white mb-1 flex items-center justify-center gap-2">
-            <span>{currentTheme.icon}</span> {currentTheme.name} Gen
-          </h2>
-          <p className="text-white/80 text-xs">
-            {network === 'SOL' ? 'Phantom Compatible' : 'Metamask Compatible'}
-          </p>
+          ))}
         </div>
-
-        <div className="p-6">
+        <button 
+          onClick={generateWallet}
+          className="w-full bg-black text-white font-bold py-3 rounded-lg hover:bg-gray-800 transition-colors"
+        >
+          Generate New Wallet
+        </button>
+        {wallet && (
           <button 
-            onClick={generateWallet}
-            className={`w-full ${currentTheme.bg} ${currentTheme.bgHover} text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-md mb-8 flex items-center justify-center gap-2`}
+            onClick={handlePrint}
+            className="w-full border-2 border-gray-200 text-gray-600 font-bold py-2 rounded-lg hover:border-gray-400 transition-colors"
           >
-            Generate New {network} Wallet
+            Print Card
           </button>
-
-          {wallet && (
-            <div className="space-y-8 animate-fade-in-up">
-              
-              {/* QR Code Section */}
-              <div className={`flex flex-col items-center p-6 ${currentTheme.lightBg} rounded-xl border ${currentTheme.border} border-dashed transition-colors duration-300`}>
-                <div className="p-2 bg-white rounded-lg shadow-sm">
-                  <QRCodeCanvas 
-                    value={wallet.publicKey} 
-                    size={160}
-                    level={"H"}
-                  />
-                </div>
-                <div className="mt-4 text-center w-full">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
-                    Public Address
-                  </p>
-                  <p className="text-xs font-mono text-gray-600 break-all bg-white border border-gray-100 p-2 rounded select-all cursor-text shadow-sm">
-                    {wallet.publicKey}
-                  </p>
-                </div>
-              </div>
-
-              {/* Mnemonic Section */}
-              <div className="bg-red-50 rounded-xl p-5 border border-red-100">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="text-red-800 font-bold text-sm flex items-center gap-2">
-                    <span className="text-lg">🔐</span> Secret Recovery Phrase
-                  </h3>
-                  <button 
-                    onClick={copyToClipboard}
-                    className="text-xs text-red-600 hover:text-red-800 font-medium underline transition-colors"
-                  >
-                    {copied ? 'Copied!' : 'Copy Phrase'}
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2">
-                  {wallet.mnemonic.split(' ').map((word, index) => (
-                    <div 
-                      key={index} 
-                      className="bg-white border border-red-100 p-2 rounded-md text-center shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      <span className="text-[10px] text-gray-400 block mb-0.5">{index + 1}</span>
-                      <span className="text-sm font-medium text-gray-800 select-all">{word}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <p className="text-center text-red-500 text-xs mt-4 font-medium border-t border-red-100 pt-3">
-                  ⚠️ This phrase grants full access to your {wallet.network} funds.
-                </p>
-              </div>
-
-            </div>
-          )}
-        </div>
+        )}
       </div>
+
+      {/* --- THE BUSINESS CARD (Print Area) --- */}
+      {/* Aspect Ratio 2:3.5 (Standard Portrait Business Card) */}
+      <div 
+        ref={cardRef}
+        className={`relative bg-white text-black shadow-2xl print:shadow-none overflow-hidden print:w-full print:h-full flex flex-col items-center
+        ${!wallet ? 'opacity-50 blur-sm' : 'opacity-100'}`}
+        style={{ 
+          width: '350px', 
+          height: '600px', // Roughly 3.5 x 2 ratio scaled up
+          border: wallet ? `1px solid #e5e7eb` : 'none'
+        }}
+      >
+        {/* 1. Header & QR Section (Top ~35%) */}
+        <div className="w-full pt-8 pb-4 flex flex-col items-center z-10">
+            {/* Header */}
+            <div className={`flex items-center gap-2 mb-4 px-4 py-1 rounded-full ${currentTheme.bgLight}`}>
+                <span className={`font-bold uppercase tracking-widest text-xs ${currentTheme.textColor}`}>
+                    {currentTheme.name} Paper Wallet
+                </span>
+            </div>
+
+            {/* QR Code */}
+            <div className="bg-white p-2 rounded-xl border-2 border-gray-100">
+                <QRCodeCanvas 
+                    value={wallet?.publicKey || "placeholder"} 
+                    size={180} // Large QR
+                    level={"H"}
+                    bgColor={"#ffffff"}
+                    fgColor={"#000000"}
+                />
+            </div>
+            
+            {/* Public Address Label */}
+            <div className="mt-4 px-8 text-center w-full">
+                <p className="text-[10px] text-gray-400 uppercase tracking-widest mb-1 font-semibold">
+                    Deposit Address (Public)
+                </p>
+                <p className="font-mono text-[11px] leading-tight break-all text-center text-gray-600">
+                    {wallet?.publicKey || "Generate a wallet to see address"}
+                </p>
+            </div>
+        </div>
+
+        {/* Divider */}
+        <div className="w-4/5 h-px bg-gray-100 my-2"></div>
+
+        {/* 2. Mnemonic Section (Majority ~65%) */}
+        <div className="flex-1 w-full px-8 pb-8 flex flex-col justify-center bg-white">
+            <div className="flex items-center justify-center gap-2 mb-4">
+                <span className="text-xl">🔐</span>
+                <h3 className="font-bold text-sm uppercase tracking-wider text-gray-800">
+                    Private Key Phrase
+                </h3>
+            </div>
+
+            {/* The Grid */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3 w-full">
+                {wallet ? (
+                    wallet.mnemonic.split(' ').map((word, index) => (
+                        <div key={index} className="flex items-end border-b border-gray-200 pb-1">
+                            <span className="text-[10px] text-gray-400 w-6 font-mono select-none">
+                                {(index + 1).toString().padStart(2, '0')}
+                            </span>
+                            <span className={`flex-1 text-sm font-bold font-mono ${currentTheme.textColor}`}>
+                                {word}
+                            </span>
+                        </div>
+                    ))
+                ) : (
+                    // Skeleton loader for visual layout
+                    Array(12).fill(0).map((_, i) => (
+                        <div key={i} className="flex items-end border-b border-gray-100 pb-1">
+                            <span className="text-[10px] text-gray-300 w-6">{(i+1).toString().padStart(2, '0')}</span>
+                            <div className="h-4 bg-gray-100 w-full rounded-sm"></div>
+                        </div>
+                    ))
+                )}
+            </div>
+
+            {/* Footer Warning */}
+            <div className="mt-auto pt-6 text-center">
+                <p className="text-[9px] text-gray-400 uppercase tracking-wider">
+                    Keep this card safe • Do not share
+                </p>
+            </div>
+        </div>
+        
+        {/* Decorative Top Border */}
+        <div className={`absolute top-0 left-0 right-0 h-2 ${network === 'SOL' ? 'bg-purple-600' : 'bg-blue-600'}`}></div>
+      </div>
+      
+      {/* Instructions visible only on screen */}
+      {!wallet && (
+        <p className="mt-4 text-gray-400 text-sm print:hidden">
+            Select a network and click Generate
+        </p>
+      )}
+
+      {/* CSS for printing cleanliness */}
+      <style>{`
+        @media print {
+          @page {
+            size: auto;
+            margin: 0mm;
+          }
+          body {
+            background-color: white;
+            -webkit-print-color-adjust: exact;
+          }
+          /* Hide everything except the card */
+          body > * { display: none !important; }
+          #root, #root > div { display: flex !important; align-items: center; justify-content: center; height: 100vh; }
+          /* Show the card */
+          .print\\:hidden { display: none !important; }
+          .print\\:shadow-none { box-shadow: none !important; }
+        }
+      `}</style>
     </div>
   );
 };
 
-export default CryptoWalletGenerator;
+export default BusinessCardWallet;
