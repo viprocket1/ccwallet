@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Keypair } from '@solana/web3.js';
 import * as bip39 from 'bip39';
 import { derivePath } from 'ed25519-hd-key';
@@ -71,7 +71,7 @@ const MinimalCardWallet = () => {
 
       {/* --- THE CARD --- */}
       <div 
-        className={`relative bg-white text-black shadow-2xl print:shadow-none overflow-hidden flex flex-col items-center justify-between px-8 py-10
+        className={`relative bg-white text-black shadow-2xl print:shadow-none overflow-hidden flex flex-col items-center justify-between px-6 py-8
         ${!wallet ? 'opacity-50 blur-sm' : 'opacity-100'}`}
         style={{ 
           width: '350px', 
@@ -79,34 +79,34 @@ const MinimalCardWallet = () => {
           border: wallet ? `1px solid #e5e7eb` : 'none'
         }}
       >
-        {/* Top: QR & Address */}
-        <div className="flex flex-col items-center w-full mt-4">
+        {/* Top: Huge QR & Address */}
+        <div className="flex flex-col items-center w-full mt-6 flex-grow justify-start">
             <QRCodeCanvas 
                 value={wallet?.publicKey || "placeholder"} 
-                size={220}
+                size={260} 
                 level={"H"}
             />
             
-            <p className="font-mono text-[10px] text-gray-500 mt-6 text-center break-all w-full leading-relaxed select-all">
+            <p className="font-mono text-[9px] text-gray-400 mt-4 text-center break-all w-full leading-tight select-all px-2">
                 {wallet?.publicKey || "------------------------------------------------"}
             </p>
         </div>
 
-        {/* Bottom: The Dotted Box (Raw Text) */}
-        <div className="w-full border-2 border-dashed border-gray-300 rounded-xl p-6 flex items-center justify-center min-h-[140px] mb-8">
+        {/* Bottom: The Compact Dotted Box (Raw Text) */}
+        <div className="w-full border border-dashed border-gray-300 rounded-lg p-3 flex items-center justify-center min-h-[80px] mb-6 bg-gray-50">
             {wallet ? (
-                <p className="font-mono text-lg text-center leading-relaxed text-gray-800 break-words font-medium">
+                <p className="font-mono text-xs text-center leading-relaxed text-gray-600 break-words font-medium tracking-tight">
                     {wallet.mnemonic}
                 </p>
             ) : (
-                <span className="text-gray-300 text-xs font-mono text-center">
-                    // RAW SEED //
+                <span className="text-gray-300 text-[10px] font-mono text-center uppercase tracking-widest">
+                    seed phrase area
                 </span>
             )}
         </div>
 
         {/* Tiny Network Indicator (Bottom Right) */}
-        <div className="absolute bottom-2 right-4 text-[10px] font-bold text-gray-300">
+        <div className="absolute bottom-2 right-4 text-[10px] font-bold text-gray-200">
             {network}
         </div>
       </div>
